@@ -15,7 +15,7 @@ def create_user(username: str) -> dict:
     """Create a new Upload Post profile."""
     r = requests.post(f"{API_BASE}/uploadposts/users",
                       headers=_headers(),
-                      data={"username": username},
+                      json={"username": username},
                       timeout=30)
     try:
         body = r.json()
