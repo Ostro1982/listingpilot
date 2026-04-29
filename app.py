@@ -395,7 +395,14 @@ def dashboard_publish(listing_id):
 def connect_social():
     agent = current_agent()
     if not agent.upload_post_username:
-        return jsonify({"error": "Profile not initialized. Please log out and re-register."}), 500
+        with Session() as s:
+            ag = s.query(Agent).filter_by(id=agent.id).first()
+            from auth import _safe_username
+            ag.upload_post_username = _safe_username(ag.email)
+            s.commit()
+            agent = ag
+
+    create_res = up.create_user(agent.upload_post_username)
 
     redirect_url = f"{_public_base()}/settings/connections-callback"
     res = up.generate_jwt(
@@ -404,7 +411,12 @@ def connect_social():
         title=f"Connect your social accounts to {_product()['name']}",
     )
     if not res.get("ok"):
-        return jsonify({"error": "Could not generate connection link", "details": res.get("body")}), 500
+        return jsonify({
+            "error": "Could not generate connection link",
+            "details": res.get("body"),
+            "create_user_result": create_res,
+            "username": agent.upload_post_username,
+        }), 500
 
     body = res.get("body") or {}
     url = body.get("access_url") or body.get("url") or body.get("jwt_url")
