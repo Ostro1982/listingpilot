@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — Dashboard</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.nav { background: var(--card); border-bottom: 1px solid var(--b); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { color: var(--acc); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+.nav a { color: var(--txt); text-decoration: none; font-size: 14px; margin-left: 18px; }
+.nav a:hover { color: var(--acc); }
+.wrap { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+h1 { margin: 0 0 4px; }
+.sub { color: var(--mut); margin-bottom: 22px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+@media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+.stat { background: var(--card); border: 1px solid var(--b); border-radius: 10px; padding: 16px 18px; }
+.stat .v { font-size: 26px; font-weight: 700; }
+.stat .l { color: var(--mut); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.top-actions { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.btn { background: var(--acc); color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 0; cursor: pointer; font-family: inherit; }
+.btn.alt { background: var(--card); border: 1px solid var(--b); color: var(--txt); }
+table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--b); font-size: 14px; }
+th { background: #0d1224; color: var(--mut); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+tr:hover { background: rgba(7,153,146,0.05); }
+a { color: var(--acc); text-decoration: none; }
+.tag { display:inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.tag.pub { background: #079992; color: white; }
+.tag.np { background: #2a3147; color: var(--mut); }
+.btn-pub { background: var(--acc); color: white; border: 0; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: inherit; }
+.empty { text-align: center; padding: 60px; color: var(--mut); background: var(--card); border-radius: 12px; }
+.warn { background: #3a2c0a; border: 1px solid #e58e26; color: #ffd089; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">{{ product.name }}</div>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/api-docs">API</a>
+    <a href="/settings">Settings</a>
+    <a href="/logout">Log out</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Hi, {{ agent.full_name or "Agent" }}</h1>
+  <div class="sub">{{ agent.brokerage or "" }}</div>
+
+  {% if agent.credits_remaining <= 0 %}
+  <div class="warn">No credits remaining. <a href="/settings#billing">Upgrade your plan</a> to create new listings.</div>
+  {% endif %}
+
+  <div class="stats">
+    <div class="stat"><div class="v">{{ stats.total }}</div><div class="l">Total listings</div></div>
+    <div class="stat"><div class="v">{{ stats.published }}</div><div class="l">Published</div></div>
+    <div class="stat"><div class="v">{{ agent.credits_remaining }}</div><div class="l">Credits left</div></div>
+    <div class="stat"><div class="v">{{ agent.plan|capitalize }}</div><div class="l">Plan</div></div>
+  </div>
+
+  <div class="top-actions">
+    <a href="/" class="btn">+ New listing</a>
+    <a href="/bulk" class="btn alt">Bulk upload (Excel/CSV)</a>
+    <a href="/api-docs" class="btn alt">API</a>
+  </div>
+
+  {% if not listings %}
+    <div class="empty">No listings yet. <a href="/">Create your first listing</a></div>
+  {% else %}
+  <table>
+    <thead><tr><th>Date</th><th>Type</th><th>Location</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for l in listings %}
+      <tr>
+        <td>{{ l.created_at.strftime('%m/%d %H:%M') }}</td>
+        <td>{{ l.property_type }} · {{ l.bedrooms }}bd/{{ l.bathrooms }}ba</td>
+        <td>{{ l.city }}, {{ l.state }}</td>
+        <td>${{ '{:,}'.format(l.price) }}</td>
+        <td>{% if l.is_published %}<span class="tag pub">Published</span>{% else %}<span class="tag np">Draft</span>{% endif %}</td>
+        <td>
+          <a href="/l/{{ l.slug }}" target="_blank">View</a> ·
+          <a href="/edit/{{ l.slug }}">Edit</a> ·
+          <a href="/files/{{ l.id }}/flyer.pdf" target="_blank">PDF</a>
+          {% if not l.is_published %} · <button class="btn-pub" onclick="pub('{{ l.id }}', this)">Publish</button>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+<script>
+async function pub(id, btn) {
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const r = await fetch(`/dashboard/publish/${id}`, { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) location.reload();
+    else { btn.disabled = false; btn.textContent = 'Publish'; alert('Error: ' + (j.error || JSON.stringify(j.body))); }
+  } catch(e) { btn.disabled = false; btn.textContent = 'Publish'; alert('Error: ' + e.message); }
+}
+</script>
+</body>
+</html>

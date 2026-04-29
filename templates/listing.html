@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ listing.property_type }} for {{ listing.operation }} in {{ listing.city }}, {{ listing.state }} | {{ agency.agency }}</title>
+<meta name="description" content="{{ listing.description[:155] }}">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ listing.property_type }} in {{ listing.city }}, {{ listing.state }} — ${{ '{:,}'.format(listing.price) }}">
+<meta property="og:description" content="{{ listing.headline }}">
+<meta property="og:url" content="{{ public_url }}">
+<meta property="og:image" content="{{ public_url.split('/l/')[0] }}/static/{{ ig_rel }}">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ listing.property_type }} in {{ listing.city }}, {{ listing.state }}">
+<meta name="twitter:description" content="{{ listing.headline }}">
+<meta name="twitter:image" content="{{ public_url.split('/l/')[0] }}/static/{{ ig_rel }}">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ listing.property_type }} for {{ listing.operation }} — {{ listing.city }}, {{ listing.state }}",
+  "description": "{{ listing.description|replace('"', "'") }}",
+  "image": [{% for p in photos_rel %}"{{ public_url.split('/l/')[0] }}/static/{{ p }}"{% if not loop.last %},{% endif %}{% endfor %}],
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ listing.address }}",
+    "addressLocality": "{{ listing.city }}",
+    "addressRegion": "{{ listing.state }}",
+    "postalCode": "{{ listing.zip_code }}",
+    "addressCountry": "US"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "{{ listing.currency }}",
+    "price": "{{ listing.price }}",
+    "availability": "https://schema.org/InStock",
+    "url": "{{ public_url }}"
+  },
+  "brand": {"@type": "Organization", "name": "{{ agency.agency }}"}
+}
+</script>
+
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:{{ agency.primary_color or '#079992' }}; --acc2:#25D366; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); line-height: 1.55; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
+header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.brand { font-weight: 700; font-size: 18px; }
+.contact-top { color: var(--mut); font-size: 13px; }
+.contact-top a { color: var(--acc); text-decoration: none; }
+h1 { font-size: 28px; margin: 0 0 6px; }
+.sub { color: var(--mut); margin-bottom: 22px; font-size: 15px; }
+.price { font-size: 38px; font-weight: 800; color: var(--acc); margin-bottom: 8px; }
+.tag { display:inline-block; background:var(--acc); color:white; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-right:8px; }
+
+.gallery { display:grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; margin-bottom: 24px; border-radius: 14px; overflow: hidden; aspect-ratio: 16/9; }
+.gallery img { width:100%; height:100%; object-fit:cover; cursor: pointer; transition: transform 0.3s; }
+.gallery img:hover { transform: scale(1.03); }
+.gallery img:first-child { grid-row: 1 / span 2; }
+@media (max-width: 700px) { .gallery { grid-template-columns: 1fr; aspect-ratio: auto; } .gallery img:first-child { grid-row: auto; aspect-ratio: 16/9; } .gallery img:not(:first-child) { aspect-ratio: 4/3; } }
+
+.grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+.card { background: var(--card); border: 1px solid var(--b); border-radius: 12px; padding: 22px; margin-bottom: 18px; }
+.card h2 { font-size: 18px; margin: 0 0 14px; }
+
+.specs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.spec { display: flex; justify-content: space-between; padding: 10px 14px; background: #0d1224; border-radius: 8px; font-size: 14px; }
+.spec span { color: var(--mut); }
+
+.amen-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.amen-item { background: #0d1224; border: 1px solid var(--b); padding: 6px 12px; border-radius: 20px; font-size: 13px; }
+
+.cta { position: sticky; top: 20px; }
+.cta .price { font-size: 28px; }
+.btn { display:flex; align-items:center; justify-content:center; gap: 8px; width:100%; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px; margin-top: 10px; border: 0; cursor: pointer; font-family: inherit; }
+.btn-wa { background: var(--acc2); color: white; }
+.btn-pdf { background: var(--acc); color: white; }
+.btn-out { background: transparent; border: 1px solid var(--b); color: var(--txt); }
+
+.lead-form input, .lead-form textarea { width: 100%; padding: 10px 12px; background: #0d1224; border: 1px solid var(--b); border-radius: 8px; color: var(--txt); margin-bottom: 8px; font-size: 14px; font-family: inherit; }
+.lead-form textarea { resize: vertical; min-height: 80px; }
+
+#map { height: 280px; border-radius: 10px; border: 1px solid var(--b); margin-top: 10px; }
+
+footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--b); color: var(--mut); font-size: 13px; text-align: center; }
+footer .powered { font-size: 11px; opacity: 0.6; margin-top: 6px; }
+
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 1000; cursor: pointer; }
+.lightbox.show { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand" style="display:flex;align-items:center;gap:10px;">
+      {% if logo_rel %}<img src="/static/{{ logo_rel }}" style="height:36px;border-radius:6px;">{% endif %}
+      {{ agency.agency }}
+    </div>
+    <div class="contact-top">
+      {{ agency.name }} ·
+      <a href="tel:{{ agency.phone }}">{{ agency.phone }}</a> ·
+      <a href="mailto:{{ agency.email }}">{{ agency.email }}</a>
+      {% if agency.license_number %}· License #{{ agency.license_number }}{% endif %}
+    </div>
+  </header>
+
+  <div>
+    <span class="tag">For {{ listing.operation }}</span>
+    <span class="tag" style="background:#3c6382;">{{ listing.property_type }}</span>
+  </div>
+  <h1 style="margin-top:10px;">{{ listing.property_type }} in {{ listing.city }}, {{ listing.state }}</h1>
+  <div class="sub">{{ listing.address }} · {{ listing.bedrooms }} bd · {{ listing.bathrooms }} ba · {{ '{:,}'.format(listing.living_area_sqft) }} sqft</div>
+
+  <div class="gallery">
+    {% for p in photos_rel[:5] %}<img src="/static/{{ p }}" alt="Photo {{ loop.index }}" onclick="openLightbox('/static/{{ p }}')">{% endfor %}
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>About this property</h2>
+        <p>{{ listing.description }}</p>
+      </div>
+
+      <div class="card">
+        <h2>Property details</h2>
+        <div class="specs">
+          <div class="spec"><span>Bedrooms</span><b>{{ listing.bedrooms }}</b></div>
+          <div class="spec"><span>Bathrooms</span><b>{{ listing.bathrooms }}</b></div>
+          <div class="spec"><span>Living area</span><b>{{ '{:,}'.format(listing.living_area_sqft) }} sqft</b></div>
+          {% if listing.lot_size_sqft %}<div class="spec"><span>Lot size</span><b>{{ '{:,}'.format(listing.lot_size_sqft) }} sqft</b></div>{% endif %}
+          <div class="spec"><span>Garage</span><b>{{ listing.garage_spaces }}</b></div>
+          <div class="spec"><span>Year built</span><b>{{ listing.year_built or '-' }}</b></div>
+          {% if listing.hoa_fee %}<div class="spec"><span>HOA</span><b>${{ '{:,.0f}'.format(listing.hoa_fee) }}/mo</b></div>{% endif %}
+        </div>
+      </div>
+
+      {% if listing.features %}
+      <div class="card">
+        <h2>Features</h2>
+        <div class="amen-list">
+          {% for a in listing.features %}<span class="amen-item">{{ a }}</span>{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <h2>Location</h2>
+        <div style="color:var(--mut);font-size:14px;">{{ listing.address }}, {{ listing.city }}, {{ listing.state }} {{ listing.zip_code }}</div>
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card cta">
+        <div class="tag">For {{ listing.operation }}</div>
+        <div class="price">${{ '{:,}'.format(listing.price) }}</div>
+        <div style="color:var(--mut);font-size:14px;margin-bottom:14px;">{{ listing.city }}, {{ listing.state }}</div>
+
+        {% if contact_url %}<a class="btn btn-wa" href="{{ contact_url }}" target="_blank">Contact Agent</a>{% endif %}
+        {% if pdf_rel %}<a class="btn btn-pdf" href="/static/{{ pdf_rel }}" download>Download flyer (PDF)</a>{% endif %}
+
+        <hr style="border:0;border-top:1px solid var(--b);margin:18px 0;">
+        <h2 style="font-size:15px;margin:0 0 10px;">Request more info</h2>
+        <form class="lead-form" onsubmit="submitLead(event)">
+          <input type="text" name="name" placeholder="Your name" required>
+          <input type="text" name="contact" placeholder="Email or phone" required>
+          <textarea name="message" placeholder="Message (optional)"></textarea>
+          <button type="submit" class="btn btn-out">Send inquiry</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    {{ agency.agency }} · {{ agency.name }} · {{ agency.phone }} · {{ agency.email }}
+    <div class="powered">Powered by {{ product.name }}</div>
+  </footer>
+</div>
+
+<div class="lightbox" id="lb" onclick="this.classList.remove('show')"><img id="lbimg" src=""></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+function openLightbox(src) {
+  document.getElementById('lbimg').src = src;
+  document.getElementById('lb').classList.add('show');
+}
+
+function submitLead(e) {
+  e.preventDefault();
+  const f = e.target;
+  const txt = `Hi, I'm ${f.name.value}. I'm interested in this property. Contact: ${f.contact.value}. ${f.message.value}`;
+  {% if contact_url %}
+  window.open(`{{ contact_url }}&text=${encodeURIComponent(txt)}`, '_blank');
+  {% else %}
+  window.location.href = `mailto:{{ agency.email }}?subject=Inquiry about {{ listing.address }}&body=${encodeURIComponent(txt)}`;
+  {% endif %}
+}
+
+(async function(){
+  const q = encodeURIComponent("{{ listing.address }}, {{ listing.city }}, {{ listing.state }} {{ listing.zip_code }}, USA");
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`);
+    const d = await r.json();
+    if (d.length) {
+      const lat = +d[0].lat, lon = +d[0].lon;
+      const map = L.map('map').setView([lat, lon], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap', maxZoom: 19
+      }).addTo(map);
+      L.marker([lat, lon]).addTo(map).bindPopup("{{ listing.address }}").openPopup();
+    } else {
+      document.getElementById('map').innerHTML = '<div style="padding:20px;color:#8892a8;text-align:center;">Location not found</div>';
+    }
+  } catch(e) {
+    document.getElementById('map').innerHTML = '<div style="padding:20px;color:#8892a8;text-align:center;">Map unavailable</div>';
+  }
+})();
+</script>
+</body>
+</html>

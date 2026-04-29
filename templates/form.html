@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — New Listing</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+.brand { font-weight: 700; font-size: 14px; color: var(--acc); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+h1 { font-size: 28px; margin: 0 0 6px; }
+.sub { color: var(--mut); margin-bottom: 28px; }
+.card { background: var(--card); border: 1px solid var(--b); border-radius: 12px; padding: 24px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.row4 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 600px) { .row, .row3, .row4 { grid-template-columns: 1fr; } }
+label { display:block; font-size: 13px; color: var(--mut); margin-bottom: 6px; }
+input, select { width:100%; background:#0d1224; color: var(--txt); border:1px solid var(--b); border-radius:8px; padding:10px 12px; font-size:14px; font-family: inherit; }
+input:focus, select:focus { outline:none; border-color: var(--acc); }
+.amen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.amen label { display:flex; align-items:center; gap:8px; color: var(--txt); font-size: 13px; cursor:pointer; }
+.amen input { width:auto; }
+button { background: var(--acc); color: white; border:0; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; width: 100%; margin-top: 16px; font-family: inherit; }
+button:hover { filter: brightness(1.1); }
+.note { font-size: 12px; color: var(--mut); margin-top: 8px; }
+section { margin-bottom: 22px; }
+section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--mut); margin: 0 0 12px; }
+.toggle { display:flex;align-items:center;gap:10px;color:var(--txt);font-size:13px;margin-top:14px; }
+.toggle input { width: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">{{ product.name }}</div>
+  <h1>Create new listing</h1>
+  <div class="sub">Fill in property data — get flyer, social post, and landing page in 60 seconds.</div>
+
+  {% with msgs = get_flashed_messages() %}
+    {% for m in msgs %}<div style="background:#3a1a1a;color:#ff8e8e;padding:10px;border-radius:8px;margin-bottom:14px;">{{ m }}</div>{% endfor %}
+  {% endwith %}
+
+  <form class="card" action="/generate" method="post" enctype="multipart/form-data">
+    <section>
+      <h3>Property</h3>
+      <div class="row3">
+        <div><label>Type</label>
+          <select name="property_type">
+            <option>Single Family</option>
+            <option>Condo</option>
+            <option>Townhouse</option>
+            <option>Multi-Family</option>
+            <option>Land</option>
+            <option>Apartment</option>
+          </select>
+        </div>
+        <div><label>Operation</label>
+          <select name="operation"><option>Sale</option><option>Rent</option></select>
+        </div>
+        <div><label>Year built</label>
+          <input name="year_built" placeholder="2018">
+        </div>
+      </div>
+      <div class="row4">
+        <div><label>Street address</label><input name="address" required placeholder="1245 Maple Ave"></div>
+        <div><label>City</label><input name="city" required placeholder="Austin"></div>
+        <div><label>State</label>
+          <select name="state" required>
+            <option value="">--</option>
+            {% for s in ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"] %}<option>{{s}}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row3">
+        <div><label>ZIP code</label><input name="zip_code" required placeholder="78704"></div>
+        <div><label>Price (USD)</label><input name="price" type="number" required placeholder="495000"></div>
+        <div><label>HOA $/mo (optional)</label><input name="hoa_fee" type="number" placeholder="0"></div>
+      </div>
+    </section>
+
+    <section>
+      <h3>Specs</h3>
+      <div class="row4">
+        <div><label>Bedrooms</label><input name="bedrooms" required placeholder="3"></div>
+        <div><label>Bathrooms</label><input name="bathrooms" required placeholder="2"></div>
+        <div><label>Garage spaces</label>
+          <select name="garage_spaces"><option>None</option><option>1</option><option>2</option><option>3+</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Living area (sqft)</label><input name="living_area_sqft" type="number" required placeholder="1850"></div>
+        <div><label>Lot size (sqft, optional)</label><input name="lot_size_sqft" type="number" placeholder="6000"></div>
+      </div>
+    </section>
+
+    <section>
+      <h3>Features</h3>
+      <div class="amen">
+        {% for a in ["Pool","Gym","Hardwood floors","Granite countertops","Stainless appliances","Walk-in closet","Backyard","Deck/Patio","Fireplace","Central A/C","Solar panels","EV charger","Smart home","Updated kitchen","Updated bath","Open floor plan","Vaulted ceilings","Basement","Attic","Waterfront"] %}
+          <label><input type="checkbox" name="features" value="{{a}}">{{a}}</label>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section>
+      <h3>Photos (first = cover)</h3>
+      <input type="file" name="photos" multiple accept="image/*" required>
+      <div class="note">1 to 8 photos. JPG or PNG.</div>
+    </section>
+
+    <label class="toggle"><input type="checkbox" name="publish"> Auto-publish to social media after generation</label>
+
+    <button type="submit">Generate listing</button>
+  </form>
+</div>
+</body>
+</html>

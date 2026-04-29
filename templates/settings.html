@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — Settings</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.nav { background: var(--card); border-bottom: 1px solid var(--b); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { color: var(--acc); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+.nav a { color: var(--txt); text-decoration: none; font-size: 14px; margin-left: 18px; }
+.wrap { max-width: 760px; margin: 30px auto; padding: 0 20px; }
+h1 { margin: 0 0 22px; }
+.card { background: var(--card); border: 1px solid var(--b); border-radius: 12px; padding: 22px; margin-bottom: 18px; }
+.card h2 { font-size: 16px; margin: 0 0 14px; }
+label { display:block; font-size: 12px; color: var(--mut); margin: 12px 0 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+input { width:100%; background:#0d1224; color: var(--txt); border:1px solid var(--b); border-radius:8px; padding:10px 12px; font-size:14px; font-family: inherit; }
+input[type=color] { padding: 4px; height: 42px; cursor: pointer; }
+button { background: var(--acc); color: white; border:0; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; font-family: inherit; }
+button.alt { background: #2a3147; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+.api-key { background:#0d1224; padding: 12px 14px; border-radius: 8px; font-family: monospace; font-size: 13px; color: var(--acc); word-break: break-all; border: 1px solid var(--b); margin-bottom: 8px; }
+.muted { color: var(--mut); font-size: 12px; margin-top: 6px; }
+.flash { background: #14392c; color: #25D366; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+.logo-preview { width: 80px; height: 80px; border-radius: 8px; background: #0d1224; border: 1px solid var(--b); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; }
+.logo-preview img { max-width: 100%; max-height: 100%; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">{{ product.name }}</div>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/api-docs">API</a>
+    <a href="/settings">Settings</a>
+    <a href="/logout">Log out</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Settings</h1>
+
+  {% with msgs = get_flashed_messages() %}
+    {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
+  {% endwith %}
+
+  <form method="post" action="/settings" enctype="multipart/form-data">
+    <div class="card">
+      <h2>Profile & contact</h2>
+      <div class="row">
+        <div><label>Full name</label><input name="full_name" value="{{ agent.full_name }}"></div>
+        <div><label>Brokerage</label><input name="brokerage" value="{{ agent.brokerage }}"></div>
+      </div>
+      <div class="row">
+        <div><label>Phone</label><input name="phone" value="{{ agent.phone }}" placeholder="+1 305 555 0100"></div>
+        <div><label>License number</label><input name="license_number" value="{{ agent.license_number }}"></div>
+      </div>
+      <label>Email (login)</label>
+      <input value="{{ agent.email }}" disabled style="opacity:0.5;">
+    </div>
+
+    <div class="card">
+      <h2>Branding</h2>
+      <div class="row">
+        <div>
+          <label>Logo</label>
+          <div style="display:flex;gap:14px;align-items:center;">
+            <div class="logo-preview">
+              {% if agent.logo_path %}<img src="/static/{{ logo_rel }}">{% else %}<span style="color:var(--mut);font-size:11px;">No logo</span>{% endif %}
+            </div>
+            <input type="file" name="logo" accept="image/png,image/jpeg" style="flex:1;">
+          </div>
+          <div class="muted">PNG or JPG, square recommended.</div>
+        </div>
+        <div>
+          <label>Primary color</label>
+          <input type="color" name="primary_color" value="{{ agent.primary_color }}">
+          <div class="muted">Used in flyer + IG image + landing page accents.</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit">Save settings</button>
+  </form>
+
+  <div class="card" id="social">
+    <h2>Social media accounts</h2>
+    <p class="muted">Connect your Facebook, Instagram, LinkedIn, X, TikTok, etc. We'll auto-publish each new listing to whatever you connect here. Your credentials never touch our servers.</p>
+
+    {% if agent.connected_platforms %}
+      <div style="margin: 14px 0;">
+        <div class="muted" style="margin-bottom:8px;">Connected:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          {% for p in agent.connected_platforms %}
+            <span style="background:#14392c;color:#25D366;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;text-transform:capitalize;">✓ {{ p }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="muted" style="margin: 14px 0;">No accounts connected yet.</div>
+    {% endif %}
+
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+      <button type="button" class="alt" onclick="connectSocial(this)">Connect / add accounts</button>
+      <button type="button" class="alt" onclick="refreshConnections(this)" style="background:transparent;border:1px solid var(--b);">Refresh status</button>
+    </div>
+    <div id="social-status" class="muted" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card" id="api">
+    <h2>API key</h2>
+    <div class="api-key">{{ agent.api_key }}</div>
+    <div class="muted">Use this key in <code>Authorization: Bearer &lt;key&gt;</code> header to create / edit listings via API.</div>
+    <form method="post" action="/settings/regen-api-key" style="margin-top:14px;">
+      <button class="alt" onclick="return confirm('Old API key will stop working. Continue?')">Regenerate API key</button>
+    </form>
+  </div>
+
+  <div class="card" id="billing">
+    <h2>Billing</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:600;">{{ agent.plan|capitalize }} plan</div>
+        <div class="muted" style="margin-top:4px;">{{ agent.credits_remaining }} credits remaining</div>
+      </div>
+      <button class="alt" disabled style="opacity:0.5;cursor:not-allowed;">Upgrade (coming soon)</button>
+    </div>
+  </div>
+</div>
+<script>
+async function connectSocial(btn) {
+  const st = document.getElementById('social-status');
+  btn.disabled = true; btn.textContent = 'Generating link...';
+  st.textContent = '';
+  try {
+    const r = await fetch('/settings/connect-social', { method: 'POST' });
+    const j = await r.json();
+    if (j.ok && j.url) {
+      st.innerHTML = 'Opening connection page... if a new tab does not open, <a href="' + j.url + '" target="_blank">click here</a>.';
+      window.open(j.url, '_blank');
+    } else {
+      st.textContent = 'Error: ' + (j.error || JSON.stringify(j));
+    }
+  } catch (e) {
+    st.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Connect / add accounts';
+  }
+}
+
+async function refreshConnections(btn) {
+  const st = document.getElementById('social-status');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const r = await fetch('/settings/refresh-connections', { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) location.reload();
+    else st.textContent = 'Error: ' + (j.error || JSON.stringify(j));
+  } catch (e) { st.textContent = 'Error: ' + e.message; }
+  finally { btn.disabled = false; btn.textContent = 'Refresh status'; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — Log in</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.box { width: 100%; max-width: 380px; padding: 32px; background: var(--card); border: 1px solid var(--b); border-radius: 14px; }
+.brand { color: var(--acc); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+h1 { margin: 6px 0 24px; font-size: 26px; }
+label { display:block; font-size: 12px; color: var(--mut); margin: 14px 0 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+input { width:100%; background:#0d1224; color: var(--txt); border:1px solid var(--b); border-radius:8px; padding:11px 12px; font-size:14px; font-family: inherit; }
+input:focus { outline:none; border-color: var(--acc); }
+button { width: 100%; background: var(--acc); color: white; border: 0; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 15px; margin-top: 24px; cursor: pointer; font-family: inherit; }
+.alt { text-align: center; margin-top: 18px; font-size: 13px; color: var(--mut); }
+.alt a { color: var(--acc); text-decoration: none; }
+.flash { background: #3a1a1a; color: #ff8e8e; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="brand">{{ product.name }}</div>
+  <h1>Log in</h1>
+
+  {% with msgs = get_flashed_messages() %}
+    {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <label>Email</label>
+    <input name="email" type="email" required autofocus>
+
+    <label>Password</label>
+    <input name="password" type="password" required>
+
+    <button type="submit">Log in</button>
+  </form>
+
+  <div class="alt">No account? <a href="/signup">Sign up free</a></div>
+</div>
+</body>
+</html>

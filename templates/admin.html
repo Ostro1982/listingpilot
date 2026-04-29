@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — Admin</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.nav { background: var(--card); border-bottom: 1px solid var(--b); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { color: var(--acc); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+.nav a { color: var(--txt); text-decoration: none; font-size: 14px; margin-left: 18px; }
+.wrap { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+h1 { margin: 0 0 4px; }
+h2 { margin: 30px 0 14px; }
+.brand { font-weight: 700; font-size: 13px; color: var(--acc); letter-spacing: 1px; text-transform: uppercase; }
+table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--b); font-size: 14px; }
+th { background: #0d1224; color: var(--mut); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+tr:hover { background: rgba(7,153,146,0.05); }
+a { color: var(--acc); text-decoration: none; }
+.tag { display:inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.tag.pub { background: #079992; color: white; }
+.tag.np { background: #2a3147; color: var(--mut); }
+.btn { background: var(--acc); color: white; border: 0; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; }
+.empty { text-align: center; padding: 60px; color: var(--mut); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">{{ product.name }} · ADMIN</div>
+  <div>
+    <a href="/dashboard">My dashboard</a>
+    <a href="/logout">Log out</a>
+  </div>
+</nav>
+<div class="wrap">
+  <h1>Admin</h1>
+
+  <h2>Agents ({{ agents|length }})</h2>
+  {% if not agents %}
+    <div class="empty">No agents yet.</div>
+  {% else %}
+  <table>
+    <thead><tr><th>Joined</th><th>Email</th><th>Brokerage</th><th>Plan</th><th>Credits</th><th>Listings</th></tr></thead>
+    <tbody>
+    {% for a in agents %}
+      <tr>
+        <td>{{ a.created_at.strftime('%m/%d') }}</td>
+        <td>{{ a.email }}{% if a.is_admin %} <span class="tag pub">ADMIN</span>{% endif %}</td>
+        <td>{{ a.brokerage }}</td>
+        <td>{{ a.plan }}</td>
+        <td>{{ a.credits_remaining }}</td>
+        <td>{{ a.listings|length }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <h2>All listings ({{ listings|length }})</h2>
+  {% if not listings %}
+    <div class="empty">No listings yet.</div>
+  {% else %}
+  <table>
+    <thead><tr><th>Date</th><th>Agent</th><th>Type</th><th>Location</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for l in listings %}
+      <tr>
+        <td>{{ l.created_at.strftime('%m/%d %H:%M') }}</td>
+        <td>{{ l.agent.email if l.agent else '-' }}</td>
+        <td>{{ l.property_type }} · {{ l.bedrooms }}bd/{{ l.bathrooms }}ba</td>
+        <td>{{ l.city }}, {{ l.state }}</td>
+        <td>${{ '{:,}'.format(l.price) }}</td>
+        <td>{% if l.is_published %}<span class="tag pub">Published</span>{% else %}<span class="tag np">Draft</span>{% endif %}</td>
+        <td>
+          <a href="/l/{{ l.slug }}" target="_blank">View</a> ·
+          <a href="/edit/{{ l.slug }}">Edit</a> ·
+          <a href="/files/{{ l.id }}/flyer.pdf" target="_blank">PDF</a> ·
+          {% if not l.is_published %}<button class="btn" onclick="publish('{{ l.id }}', this)">Publish</button>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+<script>
+async function publish(id, btn) {
+  btn.disabled = true; btn.textContent = '...';
+  const r = await fetch(`/admin/${id}/publish`, { method: 'POST' });
+  const j = await r.json();
+  if (j.ok) location.reload(); else { btn.disabled = false; btn.textContent = 'Publish'; alert('Error: ' + (j.error || JSON.stringify(j.body))); }
+}
+</script>
+</body>
+</html>

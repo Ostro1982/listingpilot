@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: listingpilot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 120 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: FLASK_SECRET
+        generateValue: true
+      - key: API_BEARER_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPLOAD_POST_API_KEY
+        sync: false
+      - key: UPLOAD_POST_USER
+        value: Demo
+      - key: SOCIAL_PLATFORMS
+        value: facebook,linkedin,x
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: AGENCY_NAME
+        value: Ostrovich Enterprises
+      - key: AGENT_NAME
+        value: Diego Ostrovich
+      - key: AGENT_PHONE
+        value: ""
+      - key: AGENT_EMAIL
+        value: diego@listingpilot.app
+      - key: PRODUCT_NAME
+        value: ListingPilot
+      - key: PRODUCT_DOMAIN
+        value: listingpilot.app

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Resultado — {{ job.prop.barrio }}</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.wrap { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+h1 { margin: 0 0 6px; }
+.sub { color: var(--mut); margin-bottom: 28px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card { background: var(--card); border: 1px solid var(--b); border-radius: 12px; padding: 20px; }
+.card h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--mut); }
+img.preview { width:100%; border-radius:10px; display:block; }
+.copy { background:#0d1224; padding:14px; border-radius:8px; white-space:pre-wrap; font-size:13px; line-height:1.5; border:1px solid var(--b); }
+.btn { display:inline-block; background: var(--acc); color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border:0; cursor:pointer; margin-top: 10px; }
+.btn.alt { background:#2a3147; }
+.btn:hover { filter: brightness(1.1); }
+.row { display:flex; gap: 10px; flex-wrap: wrap; }
+#status { margin-top: 10px; font-size: 13px; color: var(--mut); }
+a { color: var(--acc); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>{{ job.prop.tipo }} en {{ job.prop.operacion }} — {{ job.prop.barrio }}</h1>
+  <div class="sub">{{ job.prop.moneda }} {{ "{:,}".format(job.prop.precio).replace(",", ".") }} · {{ job.prop.ambientes }} amb · {{ job.prop.superficie_total }}m²</div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Imagen Instagram</h3>
+      <img src="/static/{{ rel_ig }}" class="preview">
+      <div class="row" style="margin-top:12px;">
+        <a class="btn alt" href="/static/{{ rel_ig }}" download>Descargar</a>
+        <button class="btn" id="publish-btn" onclick="publish()">Publicar a Instagram</button>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <h3>Ficha técnica PDF</h3>
+      <div style="background:#0d1224;border-radius:10px;padding:30px;text-align:center;border:1px solid var(--b);">
+        <div style="font-size:48px;">📄</div>
+        <div style="margin-top:8px;color:var(--mut);font-size:13px;">ficha.pdf</div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <a class="btn" href="/static/{{ rel_pdf }}" download>Descargar PDF</a>
+        <a class="btn alt" href="/static/{{ rel_pdf }}" target="_blank">Ver</a>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <h3>Caption Instagram</h3>
+      <div class="copy" id="caption">{{ job.text.instagram_caption }}</div>
+      <button class="btn alt" onclick="copyCaption()">Copiar caption</button>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <h3>Descripción profesional</h3>
+      <div class="copy">{{ job.text.descripcion }}</div>
+    </div>
+  </div>
+
+  <p style="margin-top:30px;"><a href="/">← Generar otra propiedad</a></p>
+</div>
+
+<script>
+function copyCaption() {
+  const t = document.getElementById('caption').innerText;
+  navigator.clipboard.writeText(t).then(() => alert('Caption copiado'));
+}
+
+async function publish() {
+  const btn = document.getElementById('publish-btn');
+  const st = document.getElementById('status');
+  btn.disabled = true;
+  st.textContent = 'Publicando...';
+  try {
+    const r = await fetch('/publish/{{ job_id }}', { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) {
+      st.innerHTML = '✓ Publicado. <a href="https://upload-post.com/history" target="_blank">Ver historial</a>';
+    } else {
+      st.textContent = 'Error: ' + (j.error || JSON.stringify(j.body));
+    }
+  } catch (e) {
+    st.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

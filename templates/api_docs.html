@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — API</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.nav { background: var(--card); border-bottom: 1px solid var(--b); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { color: var(--acc); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+.nav a { color: var(--txt); text-decoration: none; font-size: 14px; margin-left: 18px; }
+.wrap { max-width: 980px; margin: 30px auto; padding: 0 20px 60px; }
+h1 { margin: 0 0 6px; }
+.sub { color: var(--mut); margin-bottom: 24px; }
+.card { background: var(--card); border: 1px solid var(--b); border-radius: 12px; padding: 22px; margin-bottom: 20px; }
+.card h2 { font-size: 18px; margin: 0 0 14px; }
+.card h3 { font-size: 14px; margin: 18px 0 10px; color: var(--mut); text-transform: uppercase; letter-spacing: 1px; }
+code { background: #0d1224; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--acc); }
+pre { background: #0d1224; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; border: 1px solid var(--b); position: relative; }
+pre code { background: none; padding: 0; color: var(--txt); }
+.copy { position: absolute; top: 8px; right: 8px; background: var(--acc); color: white; border: 0; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: inherit; }
+.endpoint { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 700; margin-right: 8px; }
+.method-get { background: #2980b9; color: white; }
+.method-post { background: #27ae60; color: white; }
+.method-patch { background: #e67e22; color: white; }
+.method-delete { background: #c0392b; color: white; }
+.path { font-family: monospace; font-size: 14px; color: var(--txt); }
+.tab-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.tab { background: transparent; border: 1px solid var(--b); color: var(--mut); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; }
+.tab.active { background: var(--acc); color: white; border-color: var(--acc); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.api-key-box { background:#0d1224; padding: 12px 14px; border-radius: 8px; font-family: monospace; font-size: 13px; color: var(--acc); word-break: break-all; border: 1px solid var(--b); margin-bottom: 8px; display:flex; justify-content: space-between; align-items: center; gap: 10px; }
+.muted { color: var(--mut); font-size: 13px; }
+.warn { background: #2d1f0a; border: 1px solid #e58e26; color: #ffd089; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+.test-form input, .test-form textarea { width:100%; background:#0d1224; color: var(--txt); border:1px solid var(--b); border-radius:8px; padding:10px 12px; font-size:13px; font-family: inherit; margin-bottom: 10px; }
+.test-form textarea { resize: vertical; min-height: 200px; font-family: monospace; font-size: 12.5px; }
+.test-form button { background: var(--acc); color: white; border: 0; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.test-result { background:#0d1224; padding: 12px 14px; border-radius: 8px; margin-top: 10px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 400px; overflow: auto; border: 1px solid var(--b); display: none; }
+.toc { background: var(--card); border: 1px solid var(--b); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; }
+.toc a { color: var(--mut); text-decoration: none; font-size: 13px; display: inline-block; margin-right: 14px; }
+.toc a:hover { color: var(--acc); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">{{ product.name }} · API</div>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/settings">Settings</a>
+    <a href="/logout">Log out</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>API for automation</h1>
+  <div class="sub">Use the API to create or edit listings programmatically — from n8n, Zapier, a script, or any tool that can send HTTP requests.</div>
+
+  <div class="toc">
+    <a href="#auth">Authentication</a>
+    <a href="#test">Try it now</a>
+    <a href="#create">Create listing</a>
+    <a href="#list">List listings</a>
+    <a href="#update">Update listing</a>
+    <a href="#delete">Delete listing</a>
+    <a href="#examples">Tools & examples</a>
+  </div>
+
+  <div class="card" id="auth">
+    <h2>1. Authentication</h2>
+    <p>Every API request needs a header with your personal API key:</p>
+    <pre><code>Authorization: Bearer {{ agent.api_key }}</code></pre>
+
+    <h3>Your API key</h3>
+    <div class="api-key-box">
+      <span id="api-key-text">{{ agent.api_key }}</span>
+      <button class="copy" onclick="copyText('{{ agent.api_key }}', this)">Copy</button>
+    </div>
+    <div class="muted">Keep it secret. Anyone with this key can create listings on your behalf and use your credits. <a href="/settings#api">Regenerate it</a> if it leaks.</div>
+  </div>
+
+  <div class="card" id="test">
+    <h2>2. Try it now</h2>
+    <p>Paste JSON below and click "Run". This sends a real request to your account (uses 1 credit if creating).</p>
+
+    <form class="test-form" onsubmit="runTest(event)">
+      <label class="muted">Endpoint</label>
+      <select id="t-endpoint" style="background:#0d1224;color:var(--txt);border:1px solid var(--b);border-radius:8px;padding:10px;font-size:13px;width:100%;margin-bottom:10px;">
+        <option value="GET /api/me">GET /api/me — your account info</option>
+        <option value="GET /api/listings">GET /api/listings — list yours</option>
+        <option value="POST /api/listings" selected>POST /api/listings — create new (uses 1 credit)</option>
+      </select>
+
+      <label class="muted">Body (JSON)</label>
+      <textarea id="t-body">{
+  "auto_publish": false,
+  "property": {
+    "property_type": "Single Family",
+    "operation": "Sale",
+    "address": "1234 Sample St",
+    "city": "Miami",
+    "state": "FL",
+    "zip_code": "33139",
+    "price": 450000,
+    "currency": "USD",
+    "bedrooms": "3",
+    "bathrooms": "2",
+    "living_area_sqft": 1850,
+    "garage_spaces": "2",
+    "year_built": "2020",
+    "features": ["Pool", "Hardwood floors"]
+  },
+  "photos": [
+    "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1600"
+  ]
+}</textarea>
+      <button type="submit">Run request</button>
+    </form>
+    <div class="test-result" id="t-result"></div>
+  </div>
+
+  <div class="card" id="create">
+    <h2>3. Create listing</h2>
+    <div><span class="endpoint method-post">POST</span><span class="path">/api/listings</span></div>
+    <h3>Body fields</h3>
+    <ul class="muted" style="line-height:1.8;">
+      <li><code>property.property_type</code> — Single Family / Condo / Townhouse / Multi-Family / Land / Apartment</li>
+      <li><code>property.operation</code> — Sale / Rent</li>
+      <li><code>property.address</code>, <code>city</code>, <code>state</code> (2-letter), <code>zip_code</code></li>
+      <li><code>property.price</code> (integer USD), <code>bedrooms</code>, <code>bathrooms</code>, <code>living_area_sqft</code></li>
+      <li><code>property.features</code> — array of strings</li>
+      <li><code>photos</code> — array of URLs (https://...) or base64 data URIs</li>
+      <li><code>auto_publish</code> — boolean (default false). If true, posts to {{ social_platforms }} via Upload Post.</li>
+    </ul>
+
+    <div class="tab-row">
+      <button type="button" class="tab active" onclick="showTab('create', 'curl', this)">curl</button>
+      <button type="button" class="tab" onclick="showTab('create', 'js', this)">JavaScript</button>
+      <button type="button" class="tab" onclick="showTab('create', 'py', this)">Python</button>
+      <button type="button" class="tab" onclick="showTab('create', 'n8n', this)">n8n</button>
+    </div>
+
+    <div class="tab-pane active" id="create-curl">
+      <pre><button class="copy" onclick="copyParent(this)">Copy</button><code>curl -X POST {{ public_base }}/api/listings \
+  -H "Authorization: Bearer {{ agent.api_key }}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auto_publish": true,
+    "property": {
+      "property_type": "Single Family",
+      "operation": "Sale",
+      "address": "1234 Maple Ave",
+      "city": "Austin",
+      "state": "TX",
+      "zip_code": "78704",
+      "price": 495000,
+      "bedrooms": "3",
+      "bathrooms": "2",
+      "living_area_sqft": 1850,
+      "garage_spaces": "2",
+      "year_built": "2018",
+      "features": ["Pool", "Hardwood floors", "Updated kitchen"]
+    },
+    "photos": ["https://example.com/photo1.jpg", "https://example.com/photo2.jpg"]
+  }'</code></pre>
+    </div>
+
+    <div class="tab-pane" id="create-js">
+      <pre><button class="copy" onclick="copyParent(this)">Copy</button><code>const res = await fetch("{{ public_base }}/api/listings", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer {{ agent.api_key }}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    auto_publish: true,
+    property: {
+      property_type: "Single Family",
+      operation: "Sale",
+      address: "1234 Maple Ave",
+      city: "Austin",
+      state: "TX",
+      zip_code: "78704",
+      price: 495000,
+      bedrooms: "3",
+      bathrooms: "2",
+      living_area_sqft: 1850,
+      features: ["Pool", "Hardwood floors"]
+    },
+    photos: ["https://example.com/photo1.jpg"]
+  })
+});
+const data = await res.json();
+console.log(data.public_url);</code></pre>
+    </div>
+
+    <div class="tab-pane" id="create-py">
+      <pre><button class="copy" onclick="copyParent(this)">Copy</button><code>import requests
+
+r = requests.post(
+    "{{ public_base }}/api/listings",
+    headers={"Authorization": "Bearer {{ agent.api_key }}"},
+    json={
+        "auto_publish": True,
+        "property": {
+            "property_type": "Single Family",
+            "operation": "Sale",
+            "address": "1234 Maple Ave",
+            "city": "Austin",
+            "state": "TX",
+            "zip_code": "78704",
+            "price": 495000,
+            "bedrooms": "3",
+            "bathrooms": "2",
+            "living_area_sqft": 1850,
+            "features": ["Pool", "Hardwood floors"],
+        },
+        "photos": ["https://example.com/photo1.jpg"],
+    },
+)
+print(r.json()["public_url"])</code></pre>
+    </div>
+
+    <div class="tab-pane" id="create-n8n">
+      <p class="muted">Add an HTTP Request node:</p>
+      <ul class="muted" style="line-height:1.8;">
+        <li><b>Method</b>: POST</li>
+        <li><b>URL</b>: <code>{{ public_base }}/api/listings</code></li>
+        <li><b>Authentication</b>: Header Auth → Name: <code>Authorization</code>, Value: <code>Bearer {{ agent.api_key }}</code></li>
+        <li><b>Body Content Type</b>: JSON</li>
+        <li><b>Body</b>: same JSON as the curl example</li>
+      </ul>
+    </div>
+
+    <h3>Response</h3>
+    <pre><code>{
+  "ok": true,
+  "id": "abc123def456",
+  "slug": "single-family-3-bed-austin-sale-xyz789",
+  "public_url": "{{ public_base }}/l/single-family-3-bed-austin-sale-xyz789",
+  "pdf_url": "{{ public_base }}/files/abc123def456/flyer.pdf",
+  "ig_image_url": "{{ public_base }}/files/abc123def456/ig_post.jpg",
+  "headline": "...",
+  "description": "...",
+  "instagram_caption": "...",
+  "credits_remaining": 99
+}</code></pre>
+  </div>
+
+  <div class="card" id="list">
+    <h2>4. List your listings</h2>
+    <div><span class="endpoint method-get">GET</span><span class="path">/api/listings</span></div>
+    <pre><button class="copy" onclick="copyParent(this)">Copy</button><code>curl {{ public_base }}/api/listings \
+  -H "Authorization: Bearer {{ agent.api_key }}"</code></pre>
+  </div>
+
+  <div class="card" id="update">
+    <h2>5. Update listing</h2>
+    <div><span class="endpoint method-patch">PATCH</span><span class="path">/api/listings/&lt;listing_id&gt;</span></div>
+    <h3>Common patches</h3>
+    <pre><button class="copy" onclick="copyParent(this)">Copy</button><code># Drop the price + regenerate text
+curl -X PATCH {{ public_base }}/api/listings/abc123 \
+  -H "Authorization: Bearer {{ agent.api_key }}" \
+  -H "Content-Type: application/json" \
+  -d '{"property":{"price":425000},"regenerate_text":true}'
+
+# Just override the headline manually
+curl -X PATCH {{ public_base }}/api/listings/abc123 \
+  -H "Authorization: Bearer {{ agent.api_key }}" \
+  -d '{"headline":"PRICE REDUCED — Open House Sunday"}'
+
+# Add more photos
+curl -X PATCH {{ public_base }}/api/listings/abc123 \
+  -H "Authorization: Bearer {{ agent.api_key }}" \
+  -d '{"photos_add":["https://example.com/photo3.jpg"]}'
+
+# Re-publish to social
+curl -X PATCH {{ public_base }}/api/listings/abc123 \
+  -H "Authorization: Bearer {{ agent.api_key }}" \
+  -d '{"republish":true}'</code></pre>
+  </div>
+
+  <div class="card" id="delete">
+    <h2>6. Delete listing</h2>
+    <div><span class="endpoint method-delete">DELETE</span><span class="path">/api/listings/&lt;listing_id&gt;</span></div>
+    <pre><button class="copy" onclick="copyParent(this)">Copy</button><code>curl -X DELETE {{ public_base }}/api/listings/abc123 \
+  -H "Authorization: Bearer {{ agent.api_key }}"</code></pre>
+  </div>
+
+  <div class="card" id="examples">
+    <h2>7. Tools & ideas</h2>
+    <ul class="muted" style="line-height:1.8;">
+      <li><b>n8n</b> — visual workflow builder. Trigger: Google Sheets new row → HTTP POST to /api/listings → done.</li>
+      <li><b>Zapier / Make</b> — same but cloud-based.</li>
+      <li><b>Excel/CSV bulk import</b> — Python script reads file → loops → POST per row.</li>
+      <li><b>Form on your own site</b> — embed a custom form anywhere → JS sends to /api/listings.</li>
+      <li><b>MLS sync</b> — scheduled cron pulls new listings from your MLS feed → posts here automatically.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function copyText(t, btn) {
+  navigator.clipboard.writeText(t);
+  const old = btn.textContent; btn.textContent = 'Copied'; setTimeout(()=>btn.textContent=old,1200);
+}
+function copyParent(btn) {
+  const code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code);
+  const old = btn.textContent; btn.textContent = 'Copied'; setTimeout(()=>btn.textContent=old,1200);
+}
+function showTab(group, name, btn) {
+  document.querySelectorAll(`#${group} .tab`).forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll(`#${group} .tab-pane`).forEach(p => p.classList.remove('active'));
+  document.getElementById(`${group}-${name}`).classList.add('active');
+}
+
+async function runTest(e) {
+  e.preventDefault();
+  const ep = document.getElementById('t-endpoint').value;
+  const [method, path] = ep.split(' ');
+  const body = document.getElementById('t-body').value;
+  const result = document.getElementById('t-result');
+  result.style.display = 'block';
+  result.textContent = 'Loading...';
+
+  const opts = {
+    method,
+    headers: { 'Authorization': 'Bearer {{ agent.api_key }}' }
+  };
+  if (method !== 'GET') {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = body;
+  }
+
+  try {
+    const r = await fetch(path, opts);
+    const j = await r.json();
+    result.textContent = `HTTP ${r.status}\n\n` + JSON.stringify(j, null, 2);
+  } catch(err) {
+    result.textContent = 'Error: ' + err.message;
+  }
+}
+</script>
+</body>
+</html>

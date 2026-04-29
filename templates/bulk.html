@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ product.name }} — Bulk Import</title>
+<style>
+:root { --bg:#0a0e1a; --card:#141a2c; --acc:#079992; --txt:#e8eaf2; --mut:#8892a8; --b:#2a3147; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.nav { background: var(--card); border-bottom: 1px solid var(--b); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav .brand { color: var(--acc); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+.nav a { color: var(--txt); text-decoration: none; font-size: 14px; margin-left: 18px; }
+.wrap { max-width: 760px; margin: 30px auto; padding: 0 20px 60px; }
+h1 { margin: 0 0 6px; }
+.sub { color: var(--mut); margin-bottom: 24px; font-size: 15px; }
+.card { background: var(--card); border: 1px solid var(--b); border-radius: 12px; padding: 22px; margin-bottom: 20px; }
+.card h2 { font-size: 16px; margin: 0 0 12px; }
+.card p { color: var(--mut); font-size: 14px; line-height: 1.55; }
+.steps { counter-reset: step; }
+.step { counter-increment: step; padding-left: 50px; position: relative; margin-bottom: 18px; }
+.step::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--acc); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.step b { color: var(--txt); font-size: 15px; display: block; margin-bottom: 4px; }
+.step p { margin: 0; }
+input[type=file] { width:100%; background:#0d1224; color: var(--txt); border:1px dashed var(--b); border-radius:8px; padding:24px; font-size:14px; cursor: pointer; }
+input[type=file]:hover { border-color: var(--acc); }
+.toggle { display:flex;align-items:center;gap:10px;color:var(--txt);font-size:14px;margin: 18px 0; cursor: pointer; }
+.toggle input { width: auto; }
+button { background: var(--acc); color: white; border: 0; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; font-family: inherit; }
+button:hover { filter: brightness(1.1); }
+.btn-out { background: transparent; border: 1px solid var(--b); color: var(--txt); padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; display: inline-block; }
+.btn-out:hover { border-color: var(--acc); color: var(--acc); }
+.flash { background: #3a1a1a; color: #ff8e8e; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+.warn { background: #2d1f0a; border: 1px solid #e58e26; color: #ffd089; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin: 14px 0; }
+.muted { color: var(--mut); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+table th, table td { padding: 6px 10px; border-bottom: 1px solid var(--b); text-align: left; }
+table th { color: var(--mut); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+.req { color: #ff8e8e; }
+.opt { color: var(--mut); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">{{ product.name }}</div>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/api-docs">API</a>
+    <a href="/settings">Settings</a>
+    <a href="/logout">Log out</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Upload many listings at once</h1>
+  <div class="sub">Got a list of properties in Excel? Upload it here. We'll create a listing for each row in seconds. {{ agent.credits_remaining }} credits available.</div>
+
+  {% with msgs = get_flashed_messages() %}
+    {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
+  {% endwith %}
+
+  <div class="card">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <b>Download the template</b>
+        <p>Use our spreadsheet template — the columns are already named correctly.</p>
+        <a href="/bulk/template.csv" class="btn-out" style="margin-top:8px;">Download CSV template</a>
+      </div>
+      <div class="step">
+        <b>Fill it in</b>
+        <p>One property per row. Open it in Excel, Numbers, or Google Sheets. Save it as CSV or .xlsx.</p>
+      </div>
+      <div class="step">
+        <b>Add photo URLs</b>
+        <p>For each property, paste up to 8 photo URLs in the photo1, photo2, etc columns. Photos must be public links (Dropbox public link, Google Drive shared, AWS S3, your own MLS image URL, etc).</p>
+      </div>
+      <div class="step">
+        <b>Upload here</b>
+        <p>Drop the file below. We'll process every row.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Required columns</h2>
+    <table>
+      <tr><th>Column</th><th>Example</th><th>Required?</th></tr>
+      <tr><td>property_type</td><td>Single Family / Condo / Townhouse / Multi-Family / Land / Apartment</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>operation</td><td>Sale / Rent</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>address</td><td>1234 Maple Ave</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>city</td><td>Austin</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>state</td><td>TX</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>zip_code</td><td>78704</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>price</td><td>495000</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>bedrooms</td><td>3</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>bathrooms</td><td>2</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>living_area_sqft</td><td>1850</td><td><span class="req">Yes</span></td></tr>
+      <tr><td>lot_size_sqft</td><td>6500</td><td><span class="opt">No</span></td></tr>
+      <tr><td>garage_spaces</td><td>2</td><td><span class="opt">No</span></td></tr>
+      <tr><td>year_built</td><td>2018</td><td><span class="opt">No</span></td></tr>
+      <tr><td>hoa_fee</td><td>0</td><td><span class="opt">No</span></td></tr>
+      <tr><td>features</td><td>Pool, Hardwood floors, Updated kitchen</td><td><span class="opt">No</span></td></tr>
+      <tr><td>photo1 ... photo8</td><td>https://example.com/photo1.jpg</td><td><span class="req">At least 1</span></td></tr>
+    </table>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    <div class="card">
+      <h2>Upload your file</h2>
+      <input type="file" name="file" accept=".csv,.xlsx,.xlsm" required>
+      <p class="muted" style="margin-top:8px;">CSV or Excel (.xlsx). Each row = 1 listing = 1 credit.</p>
+
+      <label class="toggle">
+        <input type="checkbox" name="auto_publish">
+        Auto-publish each listing to your social media after creation
+      </label>
+
+      <div class="warn">Each property uses 1 credit and may use 1 social-publish quota. Check your file before uploading.</div>
+
+      <button type="submit">Upload and create listings</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>
