@@ -141,7 +141,7 @@ async function connectSocial(btn) {
       st.innerHTML = 'Opening connection page... if a new tab does not open, <a href="' + j.url + '" target="_blank">click here</a>.';
       window.open(j.url, '_blank');
     } else {
-      st.textContent = 'Error: ' + (j.error || JSON.stringify(j));
+      st.innerHTML = 'Error: ' + (j.error || 'unknown') + '<br><pre style="font-size:11px;color:#ff8e8e;background:#0d1224;padding:8px;border-radius:6px;margin-top:6px;white-space:pre-wrap;">' + JSON.stringify(j, null, 2) + '</pre>';
     }
   } catch (e) {
     st.textContent = 'Error: ' + e.message;
