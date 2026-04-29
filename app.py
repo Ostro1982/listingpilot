@@ -390,7 +390,7 @@ def dashboard_publish(listing_id):
         return jsonify(res)
 
 
-@app.route("/settings/connect-social", methods=["POST"])
+@app.route("/settings/connect-social", methods=["GET", "POST"])
 @require_login
 def connect_social():
     agent = current_agent()
@@ -411,19 +411,22 @@ def connect_social():
         title=f"Connect your social accounts to {_product()['name']}",
     )
     if not res.get("ok"):
-        return jsonify({
-            "error": "Could not generate connection link",
-            "details": res.get("body"),
-            "create_user_result": create_res,
-            "username": agent.upload_post_username,
-        }), 500
+        body = res.get("body")
+        return f"""<html><body style="font-family:monospace;background:#0a0e1a;color:#e8eaf2;padding:30px;">
+<h2 style="color:#ff8e8e;">Connect failed</h2>
+<p>username: <b>{agent.upload_post_username}</b></p>
+<p>jwt_status: <b>{res.get('status')}</b></p>
+<p>jwt_body:</p><pre style="background:#0d1224;padding:14px;border-radius:8px;white-space:pre-wrap;">{body}</pre>
+<p>create_user_result:</p><pre style="background:#0d1224;padding:14px;border-radius:8px;white-space:pre-wrap;">{create_res}</pre>
+<p><a href="/settings" style="color:#079992;">Back</a></p>
+</body></html>""", 500
 
     body = res.get("body") or {}
     url = body.get("access_url") or body.get("url") or body.get("jwt_url")
     if not url:
-        return jsonify({"error": "No URL returned", "details": body}), 500
+        return f"<pre style='color:white;background:#000;padding:20px;'>No URL returned. Body: {body}</pre>", 500
 
-    return jsonify({"ok": True, "url": url})
+    return redirect(url)
 
 
 @app.route("/settings/connections-callback")
